@@ -10,6 +10,9 @@
 		0B54213E1B030C6C00A7BD74 /* SwiftPromise.h in Headers */ = {isa = PBXBuildFile; fileRef = 0B54213D1B030C6C00A7BD74 /* SwiftPromise.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0B5421441B030C6C00A7BD74 /* SwiftPromise.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B5421381B030C6C00A7BD74 /* SwiftPromise.framework */; };
 		0B54214B1B030C6C00A7BD74 /* SwiftPromiseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B54214A1B030C6C00A7BD74 /* SwiftPromiseTests.swift */; };
+		0B5421551B030C7A00A7BD74 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5421541B030C7A00A7BD74 /* Promise.swift */; };
+		0BBEEAA91B14498B0022A19E /* YielderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BBEEAA81B14498B0022A19E /* YielderTests.swift */; };
+		0BFC8CE71B1431C30073BA5F /* Yielder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BFC8CE61B1431C30073BA5F /* Yielder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +32,10 @@
 		0B5421431B030C6C00A7BD74 /* SwiftPromiseTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftPromiseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B5421491B030C6C00A7BD74 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0B54214A1B030C6C00A7BD74 /* SwiftPromiseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftPromiseTests.swift; sourceTree = "<group>"; };
+		0B5421541B030C7A00A7BD74 /* Promise.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
+		0B6735241B1026360036A0C8 /* PromisePlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = PromisePlayground.playground; sourceTree = "<group>"; };
+		0BBEEAA81B14498B0022A19E /* YielderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YielderTests.swift; sourceTree = "<group>"; };
+		0BFC8CE61B1431C30073BA5F /* Yielder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Yielder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,8 +78,11 @@
 		0B54213A1B030C6C00A7BD74 /* SwiftPromise */ = {
 			isa = PBXGroup;
 			children = (
+				0B6735241B1026360036A0C8 /* PromisePlayground.playground */,
 				0B54213D1B030C6C00A7BD74 /* SwiftPromise.h */,
 				0B54213B1B030C6C00A7BD74 /* Supporting Files */,
+				0B5421541B030C7A00A7BD74 /* Promise.swift */,
+				0BFC8CE61B1431C30073BA5F /* Yielder.swift */,
 			);
 			path = SwiftPromise;
 			sourceTree = "<group>";
@@ -90,6 +100,7 @@
 			children = (
 				0B54214A1B030C6C00A7BD74 /* SwiftPromiseTests.swift */,
 				0B5421481B030C6C00A7BD74 /* Supporting Files */,
+				0BBEEAA81B14498B0022A19E /* YielderTests.swift */,
 			);
 			path = SwiftPromiseTests;
 			sourceTree = "<group>";
@@ -209,6 +220,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B5421551B030C7A00A7BD74 /* Promise.swift in Sources */,
+				0BFC8CE71B1431C30073BA5F /* Yielder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0BBEEAA91B14498B0022A19E /* YielderTests.swift in Sources */,
 				0B54214B1B030C6C00A7BD74 /* SwiftPromiseTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -323,6 +337,7 @@
 		0B54214F1B030C6C00A7BD74 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -332,12 +347,14 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		0B5421501B030C6C00A7BD74 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -399,6 +416,7 @@
 				0B5421501B030C6C00A7BD74 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0B5421511B030C6C00A7BD74 /* Build configuration list for PBXNativeTarget "SwiftPromiseTests" */ = {
 			isa = XCConfigurationList;
@@ -407,6 +425,7 @@
 				0B5421531B030C6C00A7BD74 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
