@@ -8,35 +8,40 @@
 
 import Foundation
 
-public class Promise<T> {
-    public typealias Fulfilled = (value: T) -> T
-    public typealias Rejected = (err: AnyObject?) -> T?
-    typealias Responses = (Fulfilled?, Rejected?)
-    private var rejected: AnyObject? = nil
-    private var resolved: T? = nil
+public class Fulfilled<T> {
+    let fun: (value: T) -> T
+    init(fun: (value: T) -> T) {
+        self.fun = fun
+    }
+}
+
+public class Promise {
+    public typealias Rejected = (err: Any?) -> Any?
+    private var rejected: Any? = nil
+    private var resolved: Any? = nil
 
     var position: Int = 0
-    var thens = [Responses]()
+    var thens = [(Fulfilled?, Rejected?)]()
 
     public init() { }
 
-    public func then(onFulfilled: Fulfilled, onRejected: Rejected? = nil) -> Promise {
-        if let r = resolved {
+    public func then<T: Any>(onFulfilled: (value: T) -> T, onRejected: ((err: Any?) -> T?)? = nil) -> Promise {
+        if let r = resolved as? T {
             onFulfilled(value: r)
-        } else if let r: AnyObject = rejected {
+        } else if let r: Any = rejected {
             onRejected?(err: r)
         } else {
-            thens.append((onFulfilled, onRejected))
+            thens.append((onFulfilled as? Fulfilled, onRejected as? Rejected))
         }
         return self
     }
 
-    public func catch(onRejected: Rejected) -> Promise {
-        thens.append((nil, onRejected))
+    public func catch<T: Any>(onRejected: (err: Any?) -> T?) -> Promise {
+        thens.append((nil, onRejected as? Rejected))
         return self
     }
 
-    private class func resolveIfDone<T>(p: Promise<[T]>, iterables: [T], results: [T]) {
+    private class func resolveIfDone<T>(p: Promise, iterables: [T], results: [T]) {
         if p.rejected != nil {
             return
         }
@@ -46,15 +51,14 @@ public class Promise<T> {
         }
     }
 
-    public class func all<T>(iterables: [T]) -> Promise<[T]> {
-        let p = Promise<[T]>()
+    public class func all<T>(iterables: [T]) -> Promise {
+        let p = Promise()
 
         var results = [T]()
 
         for (index, a) in enumerate(iterables) {
-            if let pro = a as? Promise<T> {
-                pro.then({ value in
-                    println("All resolved \(value)")
+            if let pro = a as? Promise {
+                pro.then({ (value: T) in
                     if index < results.count {
                         results.insert(value, atIndex: index)
                     } else {
@@ -63,12 +67,10 @@ public class Promise<T> {
                     Promise.resolveIfDone(p, iterables: iterables, results: results)
                     return value
                 }, onRejected: { err in
-                    println("All reject \(err)")
                     p.reject(err)
                     return nil
                 })
             } else {
-                println("All not a promise? \(a)")
                 if index < results.count {
                     results.insert(a, atIndex: index)
                 } else {
@@ -81,12 +83,12 @@ public class Promise<T> {
         return p
     }
 
-    public class func race<T>(iterables: [T]) -> Promise<T> {
-        let p = Promise<T>()
+    public class func race<T>(iterables: [T]) -> Promise {
+        let p = Promise()
 
         for (index, a) in enumerate(iterables) {
-            if let pro = a as? Promise<T> {
-                pro.then({ value in
+            if let pro = a as? Promise {
+                pro.then({ (value: T) in
                     if p.resolved != nil && p.rejected != nil {
                         p.resolve(value)
                     }
@@ -107,7 +109,7 @@ public class Promise<T> {
         return p
     }
 
-    public func reject(err: AnyObject?) {
+    public func reject(err: Any?) {
         resolved = nil
         rejected = err
         if position >= thens.count {
@@ -117,8 +119,8 @@ public class Promise<T> {
         if let then = thens[position].1 {
             position++
             if let resolved = then(err: rejected) {
-                if let p = resolved as? Promise<T> {
-                    p.then({ value in
+                if let p = resolved as? Promise {
+                    p.then({ (value: Any) in
                         self.resolve(value)
                         return value
                     }, onRejected: { err in
@@ -137,7 +139,7 @@ public class Promise<T> {
         }
     }
 
-    public func resolve(value: T) {
+    public func resolve<T>(value: T) {
         resolved = value
         rejected = nil
 
@@ -150,7 +152,7 @@ public class Promise<T> {
             resolved = then(value: value)
 
             if let p = resolved as? Promise {
-                p.then({ value in
+                p.then({ (value: T) in
                     self.resolve(value)
                     return value
                 }, onRejected: { err in
@@ -168,11 +170,11 @@ public class Promise<T> {
 }
 
 func foo() {
-    var p = Promise<Int>()
+    var p = Promise()
 
     p.then({ value in
         return value
-    }).catch({ err in
+    }).catch({ (err: Any?) -> Int? in
         return nil
     })
     p.resolve(1)
