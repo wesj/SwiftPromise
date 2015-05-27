@@ -42,11 +42,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SwiftPromiseTests/SwiftPromiseTests.swift"
-            timestampString = "453449541.607879"
+            timestampString = "454399530.898824"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "121"
-            endingLineNumber = "121"
+            startingLineNumber = "154"
+            endingLineNumber = "154"
             landmarkName = "testChainingPromises2()"
             landmarkType = "5">
          </BreakpointContent>
