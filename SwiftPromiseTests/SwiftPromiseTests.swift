@@ -21,101 +21,132 @@ class SwiftPromiseTests: XCTestCase {
     }
     
     func testBasicResolution() {
-        var p = Promise()
+        var p = Promise<Int>()
         p.then({ value in
-            XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
+            XCTAssertEqual(value, 1, "Resolved with correct value")
             return value
         })
         p.resolve(1)
 
-        p.then({ value -> AnyObject? in
-            XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
+        p.then({ value in
+            XCTAssertEqual(value, 1, "Resolved with correct value")
             return value
-        }, onRejected: { (err) -> AnyObject? in
+        }, onRejected: { err in
             XCTFail("Should not catch anything")
-            return err
+            return nil
         })
     }
 
     func testBasicRejection() {
-        var p = Promise()
+        var p = Promise<Int>()
         var once = false
         p.catch({ err in
             XCTAssertFalse(once, "Rejected only called once")
             once = true
             XCTAssertEqual(err as! String, "Error", "Resolved with correct error")
-            return err
+            return nil
         })
         p.reject("Error")
 
         p.then({ value in
             return value
         }, onRejected: { err in
-            println("Got \(err)")
             XCTAssertEqual(err as! String, "Error", "Resolved with correct error")
-            return err
+            return nil
         })
     }
 
     func testResolvedChaining() {
-        var p = Promise()
+        var p = Promise<Int>()
         p.then({ value in
-            XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
+            XCTAssertEqual(value, 1, "Resolved with correct value")
             return 2
         }).then({ value in
-            XCTAssertEqual(value as! Int, 2, "Resolved with correct value")
+            XCTAssertEqual(value, 2, "Resolved with correct value")
             return value
-        }).catch { (err) -> AnyObject? in
+        }).catch { err in
             XCTFail("Should not catch anything")
-            return err
+            return nil
         }
         p.resolve(1)
     }
 
     func testChainingPromises() {
-        var p = Promise()
-        p.then({ value -> AnyObject? in
+        var p = Promise<Any>()
+        p.then({ value in
             XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
-            let p2 = Promise()
+            let p2 = Promise<Any>()
             p2.resolve(2)
             return p2
-        }).then({ value -> AnyObject? in
+        }).then({ value in
             XCTAssertEqual(value as! Int, 2, "Resolved with correct value")
             return value
-        }).catch({ (err) -> AnyObject? in
+        }).catch({ err in
             XCTFail("Should not catch anything")
-            return err
+            return nil
         })
-        // p.resolve(1)
-    }
-
-    func testRejectChaining() {
-        var p = Promise()
-        p.then({ value -> AnyObject? in
-            XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
-            p.reject("Error")
-            return value
-        }).then({ value -> AnyObject? in
-            XCTFail("Should not resolve any further anything")
-            return value
-        }).catch { (err: AnyObject?) -> AnyObject? in
-            XCTAssertEqual(err as! String, "Error", "Resolved with correct error")
-            return err
-        }
         p.resolve(1)
     }
 
+    func testRejectChaining() {
+        var p = Promise<Any>()
+        p.then({ value in
+            XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
+            var p2 = Promise<Any>()
+            p2.reject("Error")
+            return p2
+        }).then({ value in
+            XCTFail("Should not resolve any further anything")
+            return value
+        }).catch({ err in
+            XCTAssertEqual(err as! String, "Error", "Resolved with correct error")
+            return true
+        }).then({ value in
+            XCTAssertTrue(true, "True")
+            return 3
+        }).catch({ err in
+            XCTFail("Fail")
+            return nil
+        })
+
+        p.resolve(1)
+    }
+
+    func testMidpointRejecting() {
+        var p = Promise<Int>()
+        p.then({ value in
+            XCTAssertEqual(value, 1, "Resolved with correct value")
+            p.reject("Error")
+            return value
+        }).then({ value in
+            XCTFail("Should not resolve any further anything")
+            return value
+        }).catch({ err in
+            XCTAssertEqual(err as! String, "Error", "Resolved with correct error")
+            return 2
+        }).then({ value in
+            XCTAssertEqual(value, 2, "True")
+            return 2
+        }).catch({ err in
+            XCTFail("Fail")
+            return nil
+        })
+
+        p.resolve(1)
+    }
+
+
     func testChainingPromises2() {
-        var p = Promise()
-        p.then({ value -> AnyObject? in
+        var p = Promise<Any>()
+        p.then({ value in
             XCTAssertEqual(value as! Int, 1, "Resolved with correct value")
 
-            let p2 = Promise()
+            let p2 = Promise<Any>()
             dispatch_after(1, dispatch_get_main_queue(), { _ in
                 p2.resolve(2)
             })
             return p2
-        }).then({ (value) -> AnyObject? in
+        }).then({ value in
             XCTAssertEqual(value as! Int, 2, "Resolved with correct value")
             return value
         }).catch { err in
@@ -128,28 +159,26 @@ class SwiftPromiseTests: XCTestCase {
     func testAllSinglePromise() {
         var p1 = 1
 
-        Promise.all([p1]).then({ (values) -> AnyObject? in
-            let ret = values as! [AnyObject?]
-            XCTAssertEqual(ret[0] as! Int, 1, "values 0 has right first value")
-            return nil
-        }, onRejected: { (err) -> AnyObject? in
+        Promise<[Int]>.all([p1]).then({ values in
+            XCTAssertEqual(values[0], 1, "values 0 has right first value")
+            return values
+        }, onRejected: { err in
             XCTFail("Should not hit this")
             return nil
         })
     }
 
     func testAllResolved() {
-        var p1 = Promise()
+        var p1 = Promise<Any>()
         var p2 = 2
-        var p3 = Promise()
+        var p3 = Promise<Any>()
 
-        Promise.all([p1, p2, p3]).then({ (values) -> AnyObject? in
-            let ret = values as! NSArray
-            XCTAssertEqual(ret[0] as! Int, 1, "values 0 has right first value")
-            XCTAssertEqual(ret[1] as! Int, 2, "values 1 has right first value")
-            XCTAssertEqual(ret[2] as! Int, 3, "values 2 has right first value")
-            return nil
-        }, onRejected: { (err) -> AnyObject? in
+        Promise<[Any]>.all([p1, p2, p3] as [Any]).then({ values in
+            XCTAssertEqual(values[0] as! Int, 1, "values 0 has right first value")
+            XCTAssertEqual(values[1] as! Int, 2, "values 1 has right first value")
+            XCTAssertEqual(values[2] as! Int, 3, "values 2 has right first value")
+            return values
+        }, onRejected: { err in
             XCTFail("Should not hit this")
             return nil
         })
@@ -159,13 +188,13 @@ class SwiftPromiseTests: XCTestCase {
     }
 
     func testAllReject() {
-        var p1 = Promise()
-        var p2 = Promise()
+        var p1 = Promise<Any>()
+        var p2 = Promise<Any>()
 
-        Promise.all([p1, p2]).then({ (values) -> AnyObject? in
+        Promise<[Any]>.all([p1, p2] as [Any]).then({ values in
             XCTFail("Should not hit this")
-            return nil
-        }, onRejected: { (err) -> AnyObject? in
+            return values
+        }, onRejected: { err in
             XCTAssertEqual("Error", err as! String, "Promise rejected")
             return nil
         })
@@ -180,13 +209,13 @@ class SwiftPromiseTests: XCTestCase {
     }
 
     func testAllRejectTwice() {
-        var p1 = Promise()
-        var p2 = Promise()
+        var p1 = Promise<Any>()
+        var p2 = Promise<Any>()
 
-        Promise.all([p1, p2]).then({ (values) -> AnyObject? in
+        Promise<[Any]>.all([p1, p2] as [Any]).then({ values in
             XCTFail("Should not hit this")
-            return nil
-        }, onRejected: { (err) -> AnyObject? in
+            return values
+        }, onRejected: { err in
             XCTAssertEqual("Error", err as! String, "Promise rejected")
             return nil
         })
@@ -201,13 +230,13 @@ class SwiftPromiseTests: XCTestCase {
     }
 
     func testRace() {
-        var p1 = Promise()
-        var p2 = Promise()
+        var p1 = Promise<Int>()
+        var p2 = Promise<Int>()
 
-        Promise.race([p1, p2]).then({ (value) -> AnyObject? in
+        Promise<Any>.race([p1, p2] as [Any]).then({ value in
             XCTAssertEqual(value as! Int, 2, "Resolved with correct value")
-            return nil
-        }, onRejected: { (err) -> AnyObject? in
+            return value
+        }, onRejected: { err in
             XCTFail("Should not hit this")
             return nil
         })
@@ -217,13 +246,13 @@ class SwiftPromiseTests: XCTestCase {
     }
 
     func testRaceReject() {
-        var p1 = Promise()
-        var p2 = Promise()
+        var p1 = Promise<Int>()
+        var p2 = Promise<Int>()
 
-        Promise.race([p1, p2]).then({ (value) -> AnyObject? in
+        Promise<Any>.race([p1, p2]).then({ value in
             XCTFail("Should not hit this")
-            return nil
-        }, onRejected: { (err) -> AnyObject? in
+            return value
+        }, onRejected: { err in
             XCTAssertEqual(err as! String, "Error", "Rejected with correct value")
             return nil
         })
