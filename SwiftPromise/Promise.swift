@@ -8,40 +8,35 @@
 
 import Foundation
 
-public class Fulfilled<T> {
-    let fun: (value: T) -> T
-    init(fun: (value: T) -> T) {
-        self.fun = fun
-    }
-}
-
-public class Promise {
-    public typealias Rejected = (err: Any?) -> Any?
+public class Promise<T> {
+    public typealias Fulfilled = (value: T) -> T
+    public typealias Rejected = (err: Any?) -> T?
+    typealias Responses = (Fulfilled?, Rejected?)
     private var rejected: Any? = nil
-    private var resolved: Any? = nil
+    private var resolved: T? = nil
 
     var position: Int = 0
-    var thens = [(Fulfilled?, Rejected?)]()
+    var thens = [Responses]()
 
     public init() { }
 
-    public func then<T: Any>(onFulfilled: (value: T) -> T, onRejected: ((err: Any?) -> T?)? = nil) -> Promise {
-        if let r = resolved as? T {
+    public func then(onFulfilled: Fulfilled, onRejected: Rejected? = nil) -> Promise {
+        if let r = resolved {
             onFulfilled(value: r)
         } else if let r: Any = rejected {
             onRejected?(err: r)
         } else {
-            thens.append((onFulfilled as? Fulfilled, onRejected as? Rejected))
+            thens.append((onFulfilled, onRejected))
         }
         return self
     }
 
-    public func catch<T: Any>(onRejected: (err: Any?) -> T?) -> Promise {
-        thens.append((nil, onRejected as? Rejected))
+    public func catch(onRejected: (err: Any?) -> T?) -> Promise {
+        thens.append((nil, onRejected))
         return self
     }
 
-    private class func resolveIfDone<T>(p: Promise, iterables: [T], results: [T]) {
+    private class func resolveIfDone<T>(p: Promise<[T]>, iterables: [T], results: [T]) {
         if p.rejected != nil {
             return
         }
@@ -51,14 +46,14 @@ public class Promise {
         }
     }
 
-    public class func all<T>(iterables: [T]) -> Promise {
-        let p = Promise()
+    public class func all<T>(iterables: [T]) -> Promise<[T]> {
+        let p = Promise<[T]>()
 
         var results = [T]()
 
         for (index, a) in enumerate(iterables) {
-            if let pro = a as? Promise {
-                pro.then({ (value: T) in
+            if let pro = a as? Promise<T> {
+                pro.then({ value in
                     if index < results.count {
                         results.insert(value, atIndex: index)
                     } else {
@@ -83,12 +78,12 @@ public class Promise {
         return p
     }
 
-    public class func race<T>(iterables: [T]) -> Promise {
-        let p = Promise()
+    public class func race<T>(iterables: [T]) -> Promise<T> {
+        let p = Promise<T>()
 
         for (index, a) in enumerate(iterables) {
-            if let pro = a as? Promise {
-                pro.then({ (value: T) in
+            if let pro = a as? Promise<T> {
+                pro.then({ value in
                     if p.resolved != nil && p.rejected != nil {
                         p.resolve(value)
                     }
@@ -119,8 +114,8 @@ public class Promise {
         if let then = thens[position].1 {
             position++
             if let resolved = then(err: rejected) {
-                if let p = resolved as? Promise {
-                    p.then({ (value: Any) in
+                if let p = resolved as? Promise<T> {
+                    p.then({ value in
                         self.resolve(value)
                         return value
                     }, onRejected: { err in
@@ -139,7 +134,7 @@ public class Promise {
         }
     }
 
-    public func resolve<T>(value: T) {
+    public func resolve(value: T) {
         resolved = value
         rejected = nil
 
@@ -152,7 +147,7 @@ public class Promise {
             resolved = then(value: value)
 
             if let p = resolved as? Promise {
-                p.then({ (value: T) in
+                p.then({ value in
                     self.resolve(value)
                     return value
                 }, onRejected: { err in
@@ -170,11 +165,11 @@ public class Promise {
 }
 
 func foo() {
-    var p = Promise()
+    var p = Promise<Int>()
 
     p.then({ value in
         return value
-    }).catch({ (err: Any?) -> Int? in
+    }).catch({ err in
         return nil
     })
     p.resolve(1)
